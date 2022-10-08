@@ -1,0 +1,73 @@
+
+		<script type="x-shader/x-vertex" id="vertexshader">
+
+			varying vec2 vUv;
+
+			void main() {
+
+				vUv = uv;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+
+			uniform sampler2D baseTexture;
+			uniform sampler2D bloomTexture;
+
+			varying vec2 vUv;
+
+			void main() {
+
+				gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
+
+			}
+
+		</script>
+<script>
+  const noise = `
+    float N21 (vec2 st) { // https://thebookofshaders.com/10/
+        return fract( sin( dot( st.xy, vec2(12.9898,78.233 ) ) ) *  43758.5453123);
+    }
+    
+    float smoothNoise( vec2 ip ){ // https://www.youtube.com/watch?v=zXsWftRdsvU
+      
+    	vec2 lv = fract( ip );
+      vec2 id = floor( ip );
+      
+      lv = lv * lv * ( 3. - 2. * lv );
+      
+      float bl = N21( id );
+      float br = N21( id + vec2( 1, 0 ));
+      float b = mix( bl, br, lv.x );
+      
+      float tl = N21( id + vec2( 0, 1 ));
+      float tr = N21( id + vec2( 1, 1 ));
+      float t = mix( tl, tr, lv.x );
+
+      return clamp(mix( b, t, lv.y ) * 0.5 + 0.5, 0., 1.);
+    }
+    
+    float smoothNoise2(vec2 p){
+
+      p.y += time;
+      p /= 4.;
+      
+      float n = smoothNoise(p) * 1.5;
+      n += smoothNoise(p * 2.01) * 0.25;
+      n += smoothNoise(p * 4.02) * 0.125;
+      n += smoothNoise(p * 8.03) * 0.0625;
+      n /= (1.5 + 0.25 + 0.125 + 0.0625);
+      return clamp(n, 0., 1.);
+    }
+  `;
+</script>
+<div class="text">
+  <span class="retro noselect"><span style="color:#eae;">Light</span>Noise</span>
+</div>
+<div class="link">
+  <a href="https://youtu.be/KemRxx-DrQg" target="_blank">Sound on YT</a>
+</div>
